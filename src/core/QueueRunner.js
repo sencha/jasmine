@@ -79,11 +79,16 @@ getJasmineRequireObj().QueueRunner = function(j$) {
         }, queueableFn.timeout()]]);
       }
 
-      try {
+      // sencha mod
+      if (j$.HANDLE_EXCEPTIONS) {
+        try {
+          queueableFn.fn.call(self.userContext, next);
+        } catch (e) {
+          handleException(e, queueableFn);
+          next();
+        }
+      } else {
         queueableFn.fn.call(self.userContext, next);
-      } catch (e) {
-        handleException(e, queueableFn);
-        next();
       }
     }
 

@@ -6,6 +6,7 @@ getJasmineRequireObj().base = function(j$, jasmineGlobal) {
   j$.MAX_PRETTY_PRINT_DEPTH = 40;
   j$.MAX_PRETTY_PRINT_ARRAY_LENGTH = 100;
   j$.DEFAULT_TIMEOUT_INTERVAL = 5000;
+  j$.HANDLE_EXCEPTIONS = true; // sencha mod
 
   j$.getGlobal = function() {
     return jasmineGlobal;
