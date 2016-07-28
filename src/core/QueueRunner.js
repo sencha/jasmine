@@ -20,7 +20,7 @@ getJasmineRequireObj().QueueRunner = function(j$) {
     this.userContext = attrs.userContext || {};
     this.timeout = attrs.timeout || {setTimeout: setTimeout, clearTimeout: clearTimeout};
     this.fail = attrs.fail || function() {};
-    this.callWithTryCatch = !!attrs.callWithTryCatch;
+    this.noTryCatch = !!attrs.noTryCatch;
   }
 
   QueueRunner.prototype.execute = function() {
@@ -50,7 +50,7 @@ getJasmineRequireObj().QueueRunner = function(j$) {
     }
 
     function attemptSync(queueableFn) {
-      if(self.callWithTryCatch)
+      if(!self.noTryCatch)
       {
         try {
           queueableFn.fn.call(self.userContext);
@@ -86,7 +86,7 @@ getJasmineRequireObj().QueueRunner = function(j$) {
         }, queueableFn.timeout()]]);
       }
 
-      if(self.callWithTryCatch) {
+      if(!self.noTryCatch) {
         try {
           queueableFn.fn.call(self.userContext, next);
         } catch (e) {

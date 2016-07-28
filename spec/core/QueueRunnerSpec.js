@@ -235,7 +235,7 @@ describe("QueueRunner", function() {
       expect(doneReturn).toBe(null);
     });
 
-    it("does not try catch an fn if told not to", function() {
+    it("does not try catch an fn if told to", function() {
       var queueableFn = {
             fn: function (done) {
               throw new Error('no try catch error');
@@ -243,7 +243,7 @@ describe("QueueRunner", function() {
           },
           queueRunner = new jasmineUnderTest.QueueRunner({
             queueableFns: [queueableFn],
-            callWithTryCatch: false
+            noTryCatch: true
           });
 
       try {
@@ -272,7 +272,7 @@ describe("QueueRunner", function() {
     expect(onExceptionCallback).toHaveBeenCalledWith(jasmine.any(Error));
   });
 
-  it("does not try catch an fn if told not to", function() {
+  it("does not try catch an fn if told to", function() {
     var queueableFn = {
           fn: function () {
             throw new Error('no try catch error');
@@ -280,7 +280,7 @@ describe("QueueRunner", function() {
         },
         queueRunner = new jasmineUnderTest.QueueRunner({
           queueableFns: [queueableFn],
-          callWithTryCatch: false
+          noTryCatch: true
         });
 
     try {
