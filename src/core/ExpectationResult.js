@@ -19,9 +19,7 @@ getJasmineRequireObj().buildExpectationResult = function() {
     return result;
 
     function message() {
-      if (options.passed) {
-        return 'Passed.';
-      } else if (options.message) {
+      if (options.message) {
         return options.message;
       } else if (options.error) {
         return messageFormatter(options.error);
