@@ -36,17 +36,15 @@ getJasmineRequireObj().Expectation = function() {
 
       var result = matcherCompare.apply(null, args);
 
-      if (!result.pass) {
-        if (!result.message) {
-          args.unshift(this.isNot);
-          args.unshift(name);
-          message = this.util.buildFailureMessage.apply(null, args);
+      if (!result.message) {
+        args.unshift(this.isNot);
+        args.unshift(name);
+        message = this.util.buildFailureMessage.apply(null, args);
+      } else {
+        if (Object.prototype.toString.apply(result.message) === '[object Function]') {
+          message = result.message();
         } else {
-          if (Object.prototype.toString.apply(result.message) === '[object Function]') {
-            message = result.message();
-          } else {
-            message = result.message;
-          }
+          message = result.message;
         }
       }
 
