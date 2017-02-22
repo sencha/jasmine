@@ -14,6 +14,25 @@ describe("jasmineUnderTest.pp", function () {
     expect(jasmineUnderTest.pp(-0)).toEqual("-0");
   });
 
+  describe('stringify sets', function() {
+    it("should stringify sets properly", function() {
+      jasmine.getEnv().requireFunctioningSets();
+      expect(jasmineUnderTest.pp(new Set([1, 2]))).toEqual("Set( 1, 2 )");
+    });
+
+    it("should truncate sets with more elments than jasmineUnderTest.MAX_PRETTY_PRINT_ARRAY_LENGTH", function() {
+      jasmine.getEnv().requireFunctioningSets();
+      var originalMaxSize = jasmineUnderTest.MAX_PRETTY_PRINT_ARRAY_LENGTH;
+
+      try {
+        jasmineUnderTest.MAX_PRETTY_PRINT_ARRAY_LENGTH = 2;
+        expect(jasmineUnderTest.pp(new Set(["a", "b", "c"]))).toEqual("Set( 'a', 'b', ... )");
+      } finally {
+        jasmineUnderTest.MAX_PRETTY_PRINT_ARRAY_LENGTH = originalMaxSize;
+      }
+    })
+  });
+
   describe('stringify arrays', function() {
     it("should stringify arrays properly", function() {
       expect(jasmineUnderTest.pp([1, 2])).toEqual("[ 1, 2 ]");
@@ -78,6 +97,11 @@ describe("jasmineUnderTest.pp", function () {
     expect(jasmineUnderTest.pp({foo:'bar', baz:3, nullValue: null, undefinedValue: jasmine.undefined})).toEqual("Object({ foo: 'bar', baz: 3, nullValue: null, undefinedValue: undefined })");
     expect(jasmineUnderTest.pp({foo: function () {
     }, bar: [1, 2, 3]})).toEqual("Object({ foo: Function, bar: [ 1, 2, 3 ] })");
+  });
+
+  it("should print 'null' as the constructor of an object with its own constructor property", function() {
+    expect(jasmineUnderTest.pp({constructor: function() {}})).toContain("null({");
+    expect(jasmineUnderTest.pp({constructor: 'foo'})).toContain("null({");
   });
 
   it("should not include inherited properties when stringifying an object", function() {
@@ -145,7 +169,6 @@ describe("jasmineUnderTest.pp", function () {
     }
   });
 
-
   it('should not do HTML escaping of strings', function() {
     expect(jasmineUnderTest.pp('some <b>html string</b> &', false)).toEqual('\'some <b>html string</b> &\'');
   });
@@ -187,6 +210,28 @@ describe("jasmineUnderTest.pp", function () {
     };
 
     expect(jasmineUnderTest.pp(obj)).toEqual("my toString");
+
+    // Simulate object from another global context (e.g. an iframe or Web Worker) that does not actually have a custom
+    // toString despite obj.toString !== Object.prototype.toString
+    var objFromOtherContext = {
+      foo: 'bar',
+      toString: function () { return Object.prototype.toString.call(this); }
+    };
+
+    if (jasmine.getEnv().ieVersion < 9) {
+      expect(jasmineUnderTest.pp(objFromOtherContext)).toEqual("Object({ foo: 'bar' })");
+    } else {
+      expect(jasmineUnderTest.pp(objFromOtherContext)).toEqual("Object({ foo: 'bar', toString: Function })");
+    }
+  });
+
+  it("should stringify objects from anonymous constructors with custom toString", function () {
+    var MyAnonymousConstructor = (function() { return function () {}; })();
+    MyAnonymousConstructor.toString = function () { return ''; };
+
+    var a = new MyAnonymousConstructor();
+
+    expect(jasmineUnderTest.pp(a)).toEqual("<anonymous>({  })");
   });
 
   it("should handle objects with null prototype", function() {

@@ -61,8 +61,12 @@ describe("matchersUtil", function() {
       expect(jasmineUnderTest.matchersUtil.equals(foo, [undefined])).toBe(true);
     });
 
-    it("fails for Arrays that are not equivalent", function() {
+    it("fails for Arrays that have different lengths", function() {
       expect(jasmineUnderTest.matchersUtil.equals([1, 2], [1, 2, 3])).toBe(false);
+    });
+
+    it("fails for Arrays that have different elements", function() {
+      expect(jasmineUnderTest.matchersUtil.equals([1, 2, 3], [1, 5, 3])).toBe(false);
     });
 
     it("fails for Arrays whose contents are equivalent, but have differing properties", function() {
@@ -135,6 +139,13 @@ describe("matchersUtil", function() {
 
       expect(jasmineUnderTest.matchersUtil.equals(actual, expected)).toBe(false);
     });
+
+    it("fails for Objects that have the same number of keys, but different keys/values", function () {
+      var expected = { a: undefined },
+        actual = { b: 1 };
+
+      expect(jasmineUnderTest.matchersUtil.equals(actual, expected)).toBe(false);
+    })
 
     it("fails when comparing an empty object to an empty array (issue #114)", function() {
       var emptyObject = {},
@@ -327,6 +338,16 @@ describe("matchersUtil", function() {
       expect(jasmineUnderTest.matchersUtil.equals(true, asymmetricTester, [symmetricTester])).toBe(true);
     });
 
+    it("passes custom equality matchers to asymmetric equality testers", function() {
+      var tester = function(a, b) {};
+      var asymmetricTester = { asymmetricMatch: jasmine.createSpy('asymmetricMatch') };
+      asymmetricTester.asymmetricMatch.and.returnValue(true);
+      var other = {};
+
+      expect(jasmineUnderTest.matchersUtil.equals(asymmetricTester, other, [tester])).toBe(true);
+      expect(asymmetricTester.asymmetricMatch).toHaveBeenCalledWith(other, [tester]);
+    });
+
     it("passes when an Any is compared to an Any that checks for the same type", function() {
       var any1 = new jasmineUnderTest.Any(Function),
           any2 = new jasmineUnderTest.Any(Function);
@@ -356,6 +377,41 @@ describe("matchersUtil", function() {
       objB.test = 'name';
 
       expect(jasmineUnderTest.matchersUtil.equals(objA, objB)).toBe(false);
+    });
+
+    it("passes when comparing two empty sets", function() {
+      jasmine.getEnv().requireFunctioningSets();
+      expect(jasmineUnderTest.matchersUtil.equals(new Set(), new Set())).toBe(true);
+    });
+
+    it("passes when comparing identical sets", function() {
+      jasmine.getEnv().requireFunctioningSets();
+      var setA = new Set([6, 5]);
+      var setB = new Set();
+      setB.add(6);
+      setB.add(5);
+      expect(jasmineUnderTest.matchersUtil.equals(setA, setB)).toBe(true);
+    });
+
+    it("fails for sets with different elements", function() {
+      jasmine.getEnv().requireFunctioningSets();
+      var setA = new Set([6, 3, 5]);
+      var setB = new Set([6, 4, 5]);
+      expect(jasmineUnderTest.matchersUtil.equals(setA, setB)).toBe(false);
+    });
+
+    it("fails for sets of different size", function() {
+      jasmine.getEnv().requireFunctioningSets();
+      var setA = new Set([6, 3]);
+      var setB = new Set([6, 4, 5]);
+      expect(jasmineUnderTest.matchersUtil.equals(setA, setB)).toBe(false);
+    });
+
+    it("fails for sets with different insertion order", function() {
+      jasmine.getEnv().requireFunctioningSets();
+      var setA = new Set([3, 6]);
+      var setB = new Set([6, 3]);
+      expect(jasmineUnderTest.matchersUtil.equals(setA, setB)).toBe(false);
     });
   });
 

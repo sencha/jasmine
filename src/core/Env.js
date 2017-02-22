@@ -11,6 +11,7 @@ getJasmineRequireObj().Env = function(j$) {
 
     var realSetTimeout = j$.getGlobal().setTimeout;
     var realClearTimeout = j$.getGlobal().clearTimeout;
+    var clearStack = j$.getClearStack(j$.getGlobal());
     this.clock = new j$.Clock(global, function () { return new j$.DelayedFunctionScheduler(); }, new j$.MockDate(global));
 
     var runnableResources = {};
@@ -155,16 +156,6 @@ getJasmineRequireObj().Env = function(j$) {
     var maximumSpecCallbackDepth = 20;
     var currentSpecCallbackDepth = 0;
 
-    function clearStack(fn) {
-      currentSpecCallbackDepth++;
-      if (currentSpecCallbackDepth >= maximumSpecCallbackDepth) {
-        currentSpecCallbackDepth = 0;
-        realSetTimeout(fn, 0);
-      } else {
-        fn();
-      }
-    }
-
     var catchException = function(e) {
       return j$.Spec.isPendingSpecException(e) || catchExceptions;
     };
@@ -248,7 +239,7 @@ getJasmineRequireObj().Env = function(j$) {
           reporter.suiteStarted(suite.result);
         },
         nodeComplete: function(suite, result) {
-          if (!suite.disabled) {
+          if (!suite.markedPending) {
             clearResourcesForRunnable(suite.id);
           }
           currentlyExecutingSuites.pop();
@@ -288,6 +279,10 @@ getJasmineRequireObj().Env = function(j$) {
       reporter.provideFallbackReporter(reporterToAdd);
     };
 
+    this.clearReporters = function() {
+      reporter.clearReporters();
+    };
+
     var spyRegistry = new j$.SpyRegistry({currentSpies: function() {
       if(!currentRunnable()) {
         throw new Error('Spies must be created in a before function or a spec');
@@ -301,6 +296,16 @@ getJasmineRequireObj().Env = function(j$) {
 
     this.spyOn = function() {
       return spyRegistry.spyOn.apply(spyRegistry, arguments);
+    };
+
+    this.spyOnProperty = function() {
+      return spyRegistry.spyOnProperty.apply(spyRegistry, arguments);
+    };
+
+    var ensureIsFunction = function(fn, caller) {
+      if (!j$.isFunction_(fn)) {
+        throw new Error(caller + ' expects a function argument; received ' + j$.getType_(fn));
+      }
     };
 
     var suiteFactory = function(description) {
@@ -318,6 +323,7 @@ getJasmineRequireObj().Env = function(j$) {
     };
 
     this.describe = function(description, specDefinitions) {
+      ensureIsFunction(specDefinitions, 'describe');
       var suite = suiteFactory(description);
       if (specDefinitions.length > 0) {
         throw new Error('describe does not expect any arguments');
@@ -330,6 +336,7 @@ getJasmineRequireObj().Env = function(j$) {
     };
 
     this.xdescribe = function(description, specDefinitions) {
+      ensureIsFunction(specDefinitions, 'xdescribe');
       var suite = suiteFactory(description);
       suite.pend();
       addSpecsToSuite(suite, specDefinitions);
@@ -339,6 +346,7 @@ getJasmineRequireObj().Env = function(j$) {
     var focusedRunnables = [];
 
     this.fdescribe = function(description, specDefinitions) {
+      ensureIsFunction(specDefinitions, 'fdescribe');
       var suite = suiteFactory(description);
       suite.isFocused = true;
 
@@ -435,6 +443,11 @@ getJasmineRequireObj().Env = function(j$) {
     };
 
     this.it = function(description, fn, timeout) {
+      // it() sometimes doesn't have a fn argument, so only check the type if
+      // it's given.
+      if (arguments.length > 1) {
+        ensureIsFunction(fn, 'it');
+      }
       var spec = specFactory(description, fn, currentDeclarationSuite, timeout);
       if (currentDeclarationSuite.markedPending) {
         spec.pend();
@@ -443,13 +456,19 @@ getJasmineRequireObj().Env = function(j$) {
       return spec;
     };
 
-    this.xit = function() {
+    this.xit = function(description, fn, timeout) {
+      // xit(), like it(), doesn't always have a fn argument, so only check the
+      // type when needed.
+      if (arguments.length > 1) {
+        ensureIsFunction(fn, 'xit');
+      }
       var spec = this.it.apply(this, arguments);
       spec.pend('Temporarily disabled with xit');
       return spec;
     };
 
     this.fit = function(description, fn, timeout){
+      ensureIsFunction(fn, 'fit');
       var spec = specFactory(description, fn, currentDeclarationSuite, timeout);
       currentDeclarationSuite.addChild(spec);
       focusedRunnables.push(spec.id);
@@ -466,6 +485,7 @@ getJasmineRequireObj().Env = function(j$) {
     };
 
     this.beforeEach = function(beforeEachFunction, timeout) {
+      ensureIsFunction(beforeEachFunction, 'beforeEach');
       currentDeclarationSuite.beforeEach({
         fn: beforeEachFunction,
         timeout: function() { return timeout || j$.DEFAULT_TIMEOUT_INTERVAL; }
@@ -473,6 +493,7 @@ getJasmineRequireObj().Env = function(j$) {
     };
 
     this.beforeAll = function(beforeAllFunction, timeout) {
+      ensureIsFunction(beforeAllFunction, 'beforeAll');
       currentDeclarationSuite.beforeAll({
         fn: beforeAllFunction,
         timeout: function() { return timeout || j$.DEFAULT_TIMEOUT_INTERVAL; }
@@ -480,6 +501,7 @@ getJasmineRequireObj().Env = function(j$) {
     };
 
     this.afterEach = function(afterEachFunction, timeout) {
+      ensureIsFunction(afterEachFunction, 'afterEach');
       currentDeclarationSuite.afterEach({
         fn: afterEachFunction,
         timeout: function() { return timeout || j$.DEFAULT_TIMEOUT_INTERVAL; }
@@ -487,6 +509,7 @@ getJasmineRequireObj().Env = function(j$) {
     };
 
     this.afterAll = function(afterAllFunction, timeout) {
+      ensureIsFunction(afterAllFunction, 'afterAll');
       currentDeclarationSuite.afterAll({
         fn: afterAllFunction,
         timeout: function() { return timeout || j$.DEFAULT_TIMEOUT_INTERVAL; }

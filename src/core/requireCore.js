@@ -30,6 +30,7 @@ var getJasmineRequireObj = (function (jasmineGlobal) {
     j$.Anything = jRequire.Anything(j$);
     j$.CallTracker = jRequire.CallTracker(j$);
     j$.MockDate = jRequire.MockDate();
+    j$.getClearStack = jRequire.clearStack(j$);
     j$.Clock = jRequire.Clock();
     j$.DelayedFunctionScheduler = jRequire.DelayedFunctionScheduler();
     j$.Env = jRequire.Env(j$);
@@ -44,14 +45,18 @@ var getJasmineRequireObj = (function (jasmineGlobal) {
     j$.QueueRunner = jRequire.QueueRunner(j$);
     j$.ReportDispatcher = jRequire.ReportDispatcher();
     j$.Spec = jRequire.Spec(j$);
+    j$.Spy = jRequire.Spy(j$);
     j$.SpyRegistry = jRequire.SpyRegistry(j$);
-    j$.SpyStrategy = jRequire.SpyStrategy();
+    j$.SpyStrategy = jRequire.SpyStrategy(j$);
     j$.StringMatching = jRequire.StringMatching(j$);
     j$.Suite = jRequire.Suite(j$);
     j$.Timer = jRequire.Timer();
     j$.TreeProcessor = jRequire.TreeProcessor();
     j$.version = jRequire.version();
     j$.Order = jRequire.Order();
+    j$.DiffBuilder = jRequire.DiffBuilder(j$);
+    j$.NullDiffBuilder = jRequire.NullDiffBuilder(j$);
+    j$.ObjectPath = jRequire.ObjectPath(j$);
 
     j$.matchers = jRequire.requireMatchers(jRequire, j$);
 

@@ -17,10 +17,12 @@ src_files:
 stylesheets:
 helpers:
   - 'helpers/BrowserFlags.js'
+  - 'helpers/checkForSet.js'
   - 'helpers/defineJasmineUnderTest.js'
 spec_files:
   - '**/*[Ss]pec.js'
   - '!npmPackage/**/*'
 spec_dir: spec
 random: true
+spec_helper: spec/support/jasmine_helper.rb
 

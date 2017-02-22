@@ -16,7 +16,7 @@ Upgrading from Jasmine 1.x? Check out the [2.0 release notes](https://github.com
 
 ## Contributing
 
-Please read the [contributors' guide](https://github.com/jasmine/jasmine/blob/master/CONTRIBUTING.md)
+Please read the [contributors' guide](https://github.com/jasmine/jasmine/blob/master/.github/CONTRIBUTING.md)
 
 ## Installation
 
@@ -28,6 +28,9 @@ For the Jasmine Ruby Gem:<br>
 
 For the Jasmine Python Egg:<br>
 [https://github.com/jasmine/jasmine-py](https://github.com/jasmine/jasmine-py)
+
+For the Jasmine headless browser gulp plugin:<br>
+[https://github.com/jasmine/gulp-jasmine-browser](https://github.com/jasmine/gulp-jasmine-browser)
 
 To install Jasmine standalone on your local box:
 
@@ -62,15 +65,15 @@ Jasmine tests itself across many browsers (Safari, Chrome, Firefox, PhantomJS, a
 
 ## Maintainers
 
-* [Davis W. Frank](mailto:dwfrank@pivotal.io), Pivotal Labs
-* [Rajan Agaskar](mailto:rajan@pivotal.io), Pivotal Labs
 * [Gregg Van Hove](mailto:gvanhove@pivotal.io), Pivotal Labs
-* [Greg Cobb](mailto:gcobb@pivotal.io), Pivotal Labs
-* [Chris Amavisca](mailto:camavisca@pivotal.io), Pivotal Labs
 
 ### Maintainers Emeritus
 
+* [Davis W. Frank](mailto:dwfrank@pivotal.io), Pivotal Labs
+* [Rajan Agaskar](mailto:rajan@pivotal.io), Pivotal Labs
+* [Greg Cobb](mailto:gcobb@pivotal.io), Pivotal Labs
+* [Chris Amavisca](mailto:camavisca@pivotal.io), Pivotal Labs
 * [Christian Williams](mailto:antixian666@gmail.com), Cloud Foundry
 * Sheel Choksi
 
-Copyright (c) 2008-2016 Pivotal Labs. This software is licensed under the MIT License.
+Copyright (c) 2008-2017 Pivotal Labs. This software is licensed under the MIT License.
