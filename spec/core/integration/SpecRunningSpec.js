@@ -475,7 +475,7 @@ describe("jasmine spec running", function () {
       env.execute();
     });
 
-    it('focused runnables unfocus ancestor focused suites', function() {
+    it('focused runnables unfocus ancestor focused suites', function(done) {
       var actions = [];
 
       env.fdescribe('focused suite', function() {
@@ -518,7 +518,29 @@ describe("jasmine spec running", function () {
     env.execute();
   });
 
-  it("should allow top level suites to be disabled", function() {
+  it("shouldn't run before/after functions in disabled suites", function(done) {
+    var shouldNotRun = jasmine.createSpy("shouldNotRun"),
+    suite = env.xdescribe('A disabled Suite', function() {
+      // None of the before/after functions should run.
+      env.beforeAll(shouldNotRun);
+      env.beforeEach(shouldNotRun);
+      env.afterEach(shouldNotRun);
+      env.afterAll(shouldNotRun);
+
+      env.it('spec inside a disabled suite', shouldNotRun);
+    });
+
+    var assertions = function() {
+      expect(shouldNotRun).not.toHaveBeenCalled();
+      done();
+    };
+
+    env.addReporter({jasmineDone: assertions});
+
+    env.execute();
+  });
+
+  it("should allow top level suites to be disabled", function(done) {
     var specInADisabledSuite = jasmine.createSpy("specInADisabledSuite"),
       otherSpec = jasmine.createSpy("otherSpec");
 

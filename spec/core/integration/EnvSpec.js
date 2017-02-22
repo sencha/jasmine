@@ -940,8 +940,8 @@ describe("Env integration", function() {
       env.addReporter(reporter);
       jasmineUnderTest.DEFAULT_TIMEOUT_INTERVAL = 1290;
 
-      env.beforeAll(function(done) {
-        jasmine.clock().tick(1290);
+      env.beforeAll(function(innerDone) {
+        jasmine.clock().tick(1291);
       });
 
       env.it("spec that will be failed", function() {
@@ -955,7 +955,7 @@ describe("Env integration", function() {
       env.execute();
     });
 
-    it("should not use the mock clock for asynchronous timeouts", function(){
+    it("should not use the mock clock for asynchronous timeouts", function(done){
       var env = new jasmineUnderTest.Env(),
         reporter = jasmine.createSpyObj('fakeReporter', [ "specDone", "jasmineDone" ]),
         clock = env.clock;
@@ -963,6 +963,7 @@ describe("Env integration", function() {
       reporter.jasmineDone.and.callFake(function() {
         expect(reporter.specDone.calls.count()).toEqual(1);
         expect(reporter.specDone.calls.argsFor(0)[0]).toEqual(jasmine.objectContaining({status: 'passed'}));
+        done();
       });
 
       env.addReporter(reporter);
@@ -976,10 +977,11 @@ describe("Env integration", function() {
         clock.uninstall();
       });
 
-      env.it("spec that should not time out", function(done) {
+      env.it("spec that should not time out", function(innerDone) {
         clock.tick(6);
         expect(true).toEqual(true);
-        done();
+        innerDone();
+        jasmine.clock().tick(1);
       });
 
       env.execute();
@@ -1006,10 +1008,12 @@ describe("Env integration", function() {
         env.afterAll(function(innerDone) {
           jasmine.clock().tick(3001);
           innerDone();
+          jasmine.clock().tick(1);
         });
       });
 
       env.execute();
+      jasmine.clock().tick(1);
     });
 
     it('should wait a custom interval before reporting async functions that fail to call done', function(done) {
@@ -1130,6 +1134,8 @@ describe("Env integration", function() {
             env.fail();
             innerDone();
           }, 1);
+          jasmine.clock().tick(1);
+          jasmine.clock().tick(1);
         });
 
         env.it('specifies a message', function(innerDone) {
@@ -1137,12 +1143,16 @@ describe("Env integration", function() {
             env.fail('messy message');
             innerDone();
           }, 1);
+          jasmine.clock().tick(1);
+          jasmine.clock().tick(1);
         });
 
         env.it('fails via the done callback', function(innerDone) {
           setTimeout(function() {
             innerDone.fail('done failed');
           }, 1);
+          jasmine.clock().tick(1);
+          jasmine.clock().tick(1);
         });
 
         env.it('has a message from an Error', function(innerDone) {
@@ -1150,14 +1160,12 @@ describe("Env integration", function() {
             env.fail(new Error('error message'));
             innerDone();
           }, 1);
+          jasmine.clock().tick(1);
+          jasmine.clock().tick(1);
         });
       });
 
       env.execute();
-      jasmine.clock().tick(1);
-      jasmine.clock().tick(1);
-      jasmine.clock().tick(1);
-      jasmine.clock().tick(1);
     });
   });
 
@@ -1186,7 +1194,7 @@ describe("Env integration", function() {
       env.execute();
     });
 
-    it('should only run focused suites', function(){
+    it('should only run focused suites', function(done){
       var env = new jasmineUnderTest.Env(),
         calls = [];
 
@@ -1417,7 +1425,7 @@ describe("Env integration", function() {
         totalSpecsDefined: 1
       });
 
-      expect(reporter.specDone).toHaveBeenCalledWith(jasmine.objectContaining({ status: 'pending' }));
+      expect(reporter.specDone).toHaveBeenCalledWith(jasmine.objectContaining({ status: 'disabled' }));
       expect(reporter.suiteDone).toHaveBeenCalledWith(jasmine.objectContaining({ description: 'xd out', status: 'pending' }));
       expect(reporter.suiteDone.calls.count()).toBe(4);
 
@@ -1572,14 +1580,17 @@ describe("Env integration", function() {
   });
 
   it("produces an understandable error message when an 'expect' is used outside of a current spec", function(done) {
-    var env = new jasmineUnderTest.Env();
+    var env = new jasmineUnderTest.Env(),
+        reporter = jasmine.createSpyObj('fakeReporter', ['jasmineDone']);
+
+    reporter.jasmineDone.and.callFake(done);
+    env.addReporter(reporter);
 
     env.describe("A Suite", function() {
       env.it("an async spec that is actually synchronous", function(underTestCallback) {
         underTestCallback();
-        expect(function() { env.expect('a').toEqual('a'); }).toThrowError(/'expect' was used when there was no current spec/);
-        done();
       });
+      expect(function() { env.expect('a').toEqual('a'); }).toThrowError(/'expect' was used when there was no current spec/);
     });
 
     env.execute();

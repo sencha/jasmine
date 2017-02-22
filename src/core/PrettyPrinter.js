@@ -5,6 +5,12 @@ getJasmineRequireObj().pp = function(j$) {
     this.seen = [];
   }
 
+  function hasCustomToString(value) {
+    // value.toString !== Object.prototype.toString if value has no custom toString but is from another context (e.g.
+    // iframe, web worker)
+    return value.toString !== Object.prototype.toString && (value.toString() !== Object.prototype.toString.call(value));
+  }
+
   PrettyPrinter.prototype.format = function(value) {
     this.ppNestLevel_++;
     try {
@@ -30,7 +36,9 @@ getJasmineRequireObj().pp = function(j$) {
         this.emitScalar('HTMLNode');
       } else if (value instanceof Date) {
         this.emitScalar('Date(' + value + ')');
-      } else if (value.toString && typeof value === 'object' && !(value instanceof Array) && value.toString !== Object.prototype.toString) {
+      } else if (value.toString && value.toString() == '[object Set]') {
+        this.emitSet(value);
+      } else if (value.toString && typeof value === 'object' && !j$.isArray_(value) && hasCustomToString(value)) {
         this.emitScalar(value.toString());
       } else if (j$.util.arrayContains(this.seen, value)) {
         this.emitScalar('<circular reference: ' + (j$.isArray_(value) ? 'Array' : 'Object') + '>');
@@ -59,6 +67,7 @@ getJasmineRequireObj().pp = function(j$) {
   };
 
   PrettyPrinter.prototype.emitArray = j$.unimplementedMethod_;
+  PrettyPrinter.prototype.emitSet = j$.unimplementedMethod_;
   PrettyPrinter.prototype.emitObject = j$.unimplementedMethod_;
   PrettyPrinter.prototype.emitScalar = j$.unimplementedMethod_;
   PrettyPrinter.prototype.emitString = j$.unimplementedMethod_;
@@ -115,8 +124,34 @@ getJasmineRequireObj().pp = function(j$) {
     this.append(' ]');
   };
 
+  StringPrettyPrinter.prototype.emitSet = function(set) {
+    if (this.ppNestLevel_ > j$.MAX_PRETTY_PRINT_DEPTH) {
+      this.append('Set');
+      return;
+    }
+    this.append('Set( ');
+    var size = Math.min(set.size, j$.MAX_PRETTY_PRINT_ARRAY_LENGTH);
+    var iter = set.values();
+    for (var i = 0; i < size; i++) {
+      if (i > 0) {
+        this.append(', ');
+      }
+      this.format(iter.next().value);
+    }
+    if (set.size > size){
+      this.append(', ...');
+    }
+    this.append(' )');
+  };
+
   StringPrettyPrinter.prototype.emitObject = function(obj) {
-    var constructorName = obj.constructor ? j$.fnNameFor(obj.constructor) : 'null';
+    var ctor = obj.constructor,
+        constructorName;
+
+    constructorName = typeof ctor === 'function' && obj instanceof ctor ?
+      j$.fnNameFor(obj.constructor) :
+      'null';
+
     this.append(constructorName);
 
     if (this.ppNestLevel_ > j$.MAX_PRETTY_PRINT_DEPTH) {

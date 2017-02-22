@@ -43,11 +43,7 @@ getJasmineRequireObj().QueueRunner = function(j$) {
       }
     }
 
-    var runnerDone = iterativeIndex >= length;
-
-    if (runnerDone) {
-      this.clearStack(this.onComplete);
-    }
+    this.clearStack(this.onComplete);
 
     function attemptSync(queueableFn) {
       if(!self.noTryCatch)

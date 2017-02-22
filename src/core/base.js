@@ -21,6 +21,10 @@ getJasmineRequireObj().base = function(j$, jasmineGlobal) {
     return j$.isA_('Array', value);
   };
 
+  j$.isObject_ = function(value) {
+    return !j$.util.isUndefined(value) && value !== null && j$.isA_('Object', value);
+  };
+
   j$.isString_ = function(value) {
     return j$.isA_('String', value);
   };
@@ -29,8 +33,16 @@ getJasmineRequireObj().base = function(j$, jasmineGlobal) {
     return j$.isA_('Number', value);
   };
 
+  j$.isFunction_ = function(value) {
+    return j$.isA_('Function', value);
+  };
+
   j$.isA_ = function(typeName, value) {
-    return Object.prototype.toString.apply(value) === '[object ' + typeName + ']';
+    return j$.getType_(value) === '[object ' + typeName + ']';
+  };
+
+  j$.getType_ = function(value) {
+    return Object.prototype.toString.apply(value);
   };
 
   j$.isDomNode = function(obj) {
@@ -38,7 +50,12 @@ getJasmineRequireObj().base = function(j$, jasmineGlobal) {
   };
 
   j$.fnNameFor = function(func) {
-    return func.name || func.toString().match(/^\s*function\s*(\w*)\s*\(/)[1];
+    if (func.name) {
+      return func.name;
+    }
+
+    var matches = func.toString().match(/^\s*function\s*(\w*)\s*\(/);
+    return matches ? matches[1] : '<anonymous>';
   };
 
   j$.any = function(clazz) {
@@ -62,38 +79,7 @@ getJasmineRequireObj().base = function(j$, jasmineGlobal) {
   };
 
   j$.createSpy = function(name, originalFn) {
-
-    var spyStrategy = new j$.SpyStrategy({
-        name: name,
-        fn: originalFn,
-        getSpy: function() { return spy; }
-      }),
-      callTracker = new j$.CallTracker(),
-      spy = function() {
-        var callData = {
-          object: this,
-          args: Array.prototype.slice.apply(arguments)
-        };
-
-        callTracker.track(callData);
-        var returnValue = spyStrategy.exec.apply(this, arguments);
-        callData.returnValue = returnValue;
-
-        return returnValue;
-      };
-
-    for (var prop in originalFn) {
-      if (prop === 'and' || prop === 'calls') {
-        throw new Error('Jasmine spies would overwrite the \'and\' and \'calls\' properties on the object being spied upon');
-      }
-
-      spy[prop] = originalFn[prop];
-    }
-
-    spy.and = spyStrategy;
-    spy.calls = callTracker;
-
-    return spy;
+    return j$.Spy(name, originalFn);
   };
 
   j$.isSpy = function(putativeSpy) {
@@ -105,18 +91,35 @@ getJasmineRequireObj().base = function(j$, jasmineGlobal) {
   };
 
   j$.createSpyObj = function(baseName, methodNames) {
-    if (j$.isArray_(baseName) && j$.util.isUndefined(methodNames)) {
+    var baseNameIsCollection = j$.isObject_(baseName) || j$.isArray_(baseName);
+
+    if (baseNameIsCollection && j$.util.isUndefined(methodNames)) {
       methodNames = baseName;
       baseName = 'unknown';
     }
 
-    if (!j$.isArray_(methodNames) || methodNames.length === 0) {
-      throw 'createSpyObj requires a non-empty array of method names to create spies for';
-    }
     var obj = {};
-    for (var i = 0; i < methodNames.length; i++) {
-      obj[methodNames[i]] = j$.createSpy(baseName + '.' + methodNames[i]);
+    var spiesWereSet = false;
+
+    if (j$.isArray_(methodNames)) {
+      for (var i = 0; i < methodNames.length; i++) {
+        obj[methodNames[i]] = j$.createSpy(baseName + '.' + methodNames[i]);
+        spiesWereSet = true;
+      }
+    } else if (j$.isObject_(methodNames)) {
+      for (var key in methodNames) {
+        if (methodNames.hasOwnProperty(key)) {
+          obj[key] = j$.createSpy(baseName + '.' + key);
+          obj[key].and.returnValue(methodNames[key]);
+          spiesWereSet = true;
+        }
+      }
     }
+
+    if (!spiesWereSet) {
+      throw 'createSpyObj requires a non-empty array or object of method names to create spies for';
+    }
+
     return obj;
   };
 };
