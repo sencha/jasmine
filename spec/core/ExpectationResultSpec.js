@@ -4,9 +4,11 @@ describe("buildExpectationResult", function() {
     expect(result.passed).toBe('some-value');
   });
 
-  it("message defaults to Passed for passing specs", function() {
+  // sencha mod, we want the message to always be returned so we can have expected/actual even
+  // for passing tests
+  it("message returns the message for passing specs", function() {
     var result = jasmineUnderTest.buildExpectationResult({passed: true, message: 'some-value'});
-    expect(result.message).toBe('Passed.');
+    expect(result.message).toBe('some-value');
   });
 
   it("message returns the message for failing expectations", function() {

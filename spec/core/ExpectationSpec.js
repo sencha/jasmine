@@ -41,7 +41,7 @@ describe("Expectation", function() {
       matchers = {
         toFoo: matcherFactory
       },
-      util = {},
+      util = { buildFailureMessage: function() { return ''; }},
       customEqualityTesters = ['a'],
       addExpectationResult = jasmine.createSpy("addExpectationResult"),
       expectation;
@@ -94,15 +94,11 @@ describe("Expectation", function() {
           };
         }
       },
-      util = {
-        buildFailureMessage: jasmine.createSpy('buildFailureMessage')
-      },
       addExpectationResult = jasmine.createSpy("addExpectationResult"),
       expectation;
 
     expectation = new jasmineUnderTest.Expectation({
       customMatchers: matchers,
-      util: util,
       actual: "an actual",
       addExpectationResult: addExpectationResult
     });

@@ -1,7 +1,7 @@
 getJasmineRequireObj().Expectation = function() {
 
   function Expectation(options) {
-    this.util = options.util || { buildFailureMessage: function() {} };
+    this.util = options.util || { buildFailureMessage: function() { return ''; } };
     this.customEqualityTesters = options.customEqualityTesters || [];
     this.actual = options.actual;
     this.addExpectationResult = options.addExpectationResult || function(){};
